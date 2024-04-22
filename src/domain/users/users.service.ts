@@ -87,6 +87,6 @@ export class UserService {
   }
 
   generateJwt(user: User): string {
-    return sign({ username: user.username }, 'jwtusageonly');
+    return sign({ username: user.username }, process.env.JWT_SECRET);
   }
 }

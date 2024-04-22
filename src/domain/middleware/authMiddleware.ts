@@ -12,7 +12,7 @@ export class AuthMiddleware implements NestMiddleware {
     }
 
     const token = req.header('Authorization').replace('Bearer ', '');
-    const decode = verify(token, 'jwtusageonly');
+    const decode = verify(token, process.env.JWT_SECRET);
 
     const user = await this.userService.findByCridential(decode.username);
 
