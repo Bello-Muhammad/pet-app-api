@@ -5,14 +5,17 @@ export type PetDocument = Pet & Document;
 
 @Schema()
 export class Pet {
-  @Prop()
+  @Prop({ required: true })
   petName: string;
 
-  @Prop()
+  @Prop({ required: true })
   petType: string;
 
-  @Prop()
+  @Prop({ required: true })
   description: string;
+
+  @Prop({ default: '' })
+  imageURL: string;
 }
 
 export const PetSchema = SchemaFactory.createForClass(Pet);
