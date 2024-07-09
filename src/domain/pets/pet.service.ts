@@ -2,6 +2,13 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PetRepository } from './pet.repository';
 import { Pet } from './schemas/pet.schema';
 import { UpdatePetDto } from './dto/update-pet.dto';
+import * as AWS from 'aws-sdk';
+
+// AWS related environment variables
+const awsBucketName = process.env.AWS_BUCKET_NAME as string;
+const awsBucketRegion = process.env.AWS_BUCKET_REGION as string;
+const awsAccessKey = process.env.AWS_ACCESS_KEY as string;
+const awsSecretAccessKey = process.env.AWS_SECRET_ACCESS_KEY as string;
 
 @Injectable()
 export class PetsService {
@@ -11,7 +18,7 @@ export class PetsService {
     return this.petRepository.find({});
   }
 
-  async getPetById(petId: string): Promise<Pet> {
+  async getPetById(petId: string): Promise<any> {
     const pet = await this.petRepository.findOne({ _id: petId });
 
     if (!pet) {
@@ -24,7 +31,8 @@ export class PetsService {
   async createPet(
     petName: string,
     petType: string,
-    description: string
+    description: string,
+    file: any
   ): Promise<Pet> {
     const checkForPet = await this.petRepository.findOne({ petName });
 
@@ -32,10 +40,44 @@ export class PetsService {
       throw new HttpException('this pet already added', HttpStatus.FOUND);
     }
 
-    return this.petRepository.create({
+    if (file) {
+      const s3 = new AWS.S3({
+        accessKeyId: awsAccessKey,
+        secretAccessKey: awsSecretAccessKey
+      });
+
+      const { buffer, originalname, mimetype } = file;
+
+      const params = {
+        Bucket: awsBucketName,
+        Key: originalname,
+        Body: buffer,
+        ACL: 'public-read',
+        ContentType: mimetype,
+        ContentDisposition: 'inline',
+        CreateBucketConfiguration: {
+          LocationConstraint: `${awsBucketRegion}`
+        }
+      };
+
+      const s3Response = await s3.upload(params).promise();
+      const { Location } = s3Response;
+
+      return await this.petRepository.create({
+        petName,
+        petType,
+        description,
+        imageURL: Location
+      });
+    }
+
+    const imageUrl = '';
+
+    return await this.petRepository.create({
       petName,
       petType,
-      description
+      description,
+      imageURL: imageUrl
     });
   }
 

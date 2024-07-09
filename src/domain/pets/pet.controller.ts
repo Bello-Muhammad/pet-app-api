@@ -5,13 +5,16 @@ import {
   Get,
   Param,
   Patch,
-  Post
+  Post,
+  UploadedFile,
+  UseInterceptors
 } from '@nestjs/common';
 import { PetsService } from './pet.service';
 import { Pet } from './schemas/pet.schema';
 import { CreatePetDto } from './dto/create-pet.dto';
 import { UpdatePetDto } from './dto/update-pet.dto';
 import { ApiResponseHandler } from '../responseHandler/petResponse.handler';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('pets')
 export class PetsController {
@@ -63,12 +66,17 @@ export class PetsController {
   }
 
   @Post('create-pet')
-  async createPet(@Body() createPetDto: CreatePetDto): Promise<Pet> {
+  @UseInterceptors(FileInterceptor('image'))
+  async createPet(
+    @Body() createPetDto: CreatePetDto,
+    @UploadedFile() file: Express.Multer.File
+  ): Promise<Pet> {
     try {
       const newPet = await this.petsService.createPet(
         createPetDto.petName,
         createPetDto.petType,
-        createPetDto.description
+        createPetDto.description,
+        file
       );
 
       return ApiResponseHandler.successResponse(

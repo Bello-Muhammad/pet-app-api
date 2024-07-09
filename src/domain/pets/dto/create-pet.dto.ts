@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreatePetDto {
   @IsNotEmpty({ message: 'please provide pet name' })
@@ -12,4 +12,7 @@ export class CreatePetDto {
   @IsNotEmpty({ message: 'please provide details of the pet' })
   @IsString({ message: 'pet details must be in string' })
   description: string;
+
+  @IsOptional()
+  image: string;
 }
